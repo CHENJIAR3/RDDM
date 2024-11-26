@@ -16,7 +16,10 @@ def ddpm_schedule(beta1: float, beta2: float, T: int) -> Dict[str, torch.Tensor]
     assert beta1 < beta2 < 1.0, "beta1 and beta2 must be in (0, 1)"
 
     beta_t = (beta2 - beta1) * torch.arange(0, T + 1, dtype=torch.float32) / T + beta1
-    sqrt_beta_t = torch.sqrt(beta_t)
+    # 源代码的设置，影响不大。
+    # sqrt_beta_t = torch.sqrt(beta_t)
+
+
     alpha_t = 1 - beta_t
     log_alpha_t = torch.log(alpha_t)
     alphabar_t = torch.cumsum(log_alpha_t, dim=0).exp()
@@ -26,7 +29,8 @@ def ddpm_schedule(beta1: float, beta2: float, T: int) -> Dict[str, torch.Tensor]
 
     sqrtmab = torch.sqrt(1 - alphabar_t)
     mab_over_sqrtmab_inv = (1 - alpha_t) / sqrtmab
-
+    # 20240706.CJR调整了
+    sqrt_beta_t = torch.sqrt(beta_t*(1-alphabar_t/alpha_t)/(1-alphabar_t))
     return {
         "alpha_t": alpha_t,  # \alpha_t
         "oneover_sqrta": oneover_sqrta,  # 1/\sqrt{\alpha_t}
